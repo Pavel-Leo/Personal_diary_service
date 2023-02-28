@@ -2,8 +2,9 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
+from django.urls import reverse
 
-from ..models import Group, Post
+from ..models import Comment, Follow, Group, Post
 
 User = get_user_model()
 
@@ -87,3 +88,69 @@ class PostURLTests(TestCase):
             with self.subTest(template=template):
                 response = self.authorized_client_author.get(address)
                 self.assertTemplateUsed(response, template)
+
+    def test_guest_not_create_comment(self):
+        """Неавторизованный пользователь не может создать комментарий."""
+        form_data = {
+            "post": self.post.id,
+            "author": self.user_author.id,
+            "text": "Тестовый комментарий",
+        }
+        comment_count = Comment.objects.count()
+        self.guest_client.post(
+            reverse("posts:add_comment", kwargs={"post_id": self.post.id}),
+            data=form_data,
+            follow=True,
+        )
+        self.assertEqual(Comment.objects.count(), comment_count)
+
+
+class FollowersTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username="author")
+        cls.user_2 = User.objects.create_user(username="follower")
+        cls.group = Group.objects.create(
+            title="Тестовый группа",
+            slug="test-slug",
+            description="Тестовое описание группы",
+        )
+
+    def setUp(self):
+        self.authorized_author = Client()
+        self.authorized_author.force_login(FollowersTests.user)
+        self.follower = Client()
+        self.follower.force_login(FollowersTests.user_2)
+
+    def test_follow_author(self):
+        """Проверка, что пользователь может подписаться на другого
+        пользователя.
+        """
+        follow_list = Follow.objects.count()
+        self.follower.get(
+            reverse(
+                "posts:profile_follow",
+                kwargs={"username": FollowersTests.user.username},
+            )
+        )
+        self.assertEqual(follow_list + 1, Follow.objects.count())
+
+    def test_unfollow_author(self):
+        """Проверка, что пользователь может отписаться от другого
+        пользователя.
+        """
+        self.follower.get(
+            reverse(
+                "posts:profile_follow",
+                kwargs={"username": FollowersTests.user.username},
+            )
+        )
+        follow_list = Follow.objects.count()
+        self.follower.get(
+            reverse(
+                "posts:profile_unfollow",
+                kwargs={"username": FollowersTests.user.username},
+            )
+        )
+        self.assertEqual(follow_list - 1, Follow.objects.count())

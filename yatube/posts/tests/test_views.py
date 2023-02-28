@@ -154,7 +154,7 @@ class PostViewsTest(TestCase):
         self.context_tests(response, post_detailed=True)
 
     def post_create_or_post_edit_support_func(self, response):
-        """Вспомогательная функции для проверки приавильного контекста
+        """Вспомогательная функции для проверки правильного контекста
         шаблонов для создания и редактирования постов."""
         form_fields = {
             "text": forms.fields.CharField,
@@ -309,38 +309,6 @@ class FollowersTests(TestCase):
         self.authorized_author.force_login(FollowersTests.user)
         self.follower = Client()
         self.follower.force_login(FollowersTests.user_2)
-
-    def test_follow_author(self):
-        """Проверка, что пользователь может подписаться на другого
-        пользователя.
-        """
-        follow_list = Follow.objects.count()
-        self.follower.get(
-            reverse(
-                "posts:profile_follow",
-                kwargs={"username": FollowersTests.user.username},
-            )
-        )
-        self.assertEqual(follow_list + 1, Follow.objects.count())
-
-    def test_unfollow_author(self):
-        """Проверка, что пользователь может отписаться от другого
-        пользователя.
-        """
-        self.follower.get(
-            reverse(
-                "posts:profile_follow",
-                kwargs={"username": FollowersTests.user.username},
-            )
-        )
-        follow_list = Follow.objects.count()
-        self.follower.get(
-            reverse(
-                "posts:profile_unfollow",
-                kwargs={"username": FollowersTests.user.username},
-            )
-        )
-        self.assertEqual(follow_list - 1, Follow.objects.count())
 
     def check_post_for_following(self):
         """Создания поста для теста подписок"""

@@ -155,21 +155,17 @@ class CommentFormTest(TestCase):
         self.authorized_client.force_login(self.user)
         self.guest_client = Client()
 
-    def comment_support_func(self):
-        """Вспомогательная функция для проверки создания комментариев."""
+    def test_comment_create(self):
+        """Валидная форма создает комментарий."""
         form_data = {
             "post": self.post.id,
             "author": self.user.id,
             "text": "Тестовый комментарий",
         }
-        return form_data
-
-    def test_comment_create(self):
-        """Валидная форма создает комментарий."""
         comment_count = Comment.objects.count()
         response = self.authorized_client.post(
             reverse("posts:add_comment", kwargs={"post_id": self.post.id}),
-            data=self.comment_support_func(),
+            data=form_data,
             follow=True,
         )
         self.assertRedirects(
@@ -181,18 +177,8 @@ class CommentFormTest(TestCase):
         self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertTrue(
             Comment.objects.filter(
-                author=self.comment_support_func()["author"],
-                post=self.comment_support_func()["post"],
-                text=self.comment_support_func()["text"],
+                author=form_data["author"],
+                post=form_data["post"],
+                text=form_data["text"],
             ).exists()
         )
-
-    def test_guest_not_create_comment(self):
-        """Неавторизованный пользователь не может создать комментарий."""
-        comment_count = Comment.objects.count()
-        self.guest_client.post(
-            reverse("posts:add_comment", kwargs={"post_id": self.post.id}),
-            data=self.comment_support_func(),
-            follow=True,
-        )
-        self.assertEqual(Comment.objects.count(), comment_count)
