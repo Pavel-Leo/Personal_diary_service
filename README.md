@@ -5,14 +5,15 @@
 оставлять комментарии к постам.
 
 ## Стек
-Python 3.7 
-Django 2.2.19
-Html 5
-Sqlite3
-css
-bootsrap
-Pillow 8.3.1 
-sorl-thumbnail 12.7.0
+Python 3.7, 
+Django 2.2.19,
+Html 5,
+Sqlite3,
+css,
+bootsrap,
+Pillow 8.3.1, 
+sorl-thumbnail 12.7.0,
+Unittest
 
 ## Как запустить проект:
 
